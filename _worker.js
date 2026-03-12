@@ -46,7 +46,6 @@ let 网络备案 = `<a href='https://t.me/CMLiussss'>萌ICP备-20240707号</a>`;
 let 额外ID = '0';
 let 加密方式 = 'auto';
 let 网站图标, 网站头像, 网站背景, xhttp = '';
-const BUILD_TAG = '2026-03-12-1';
 async function 整理优选列表(api) {
 	if (!api || api.length === 0) return [];
 
@@ -915,7 +914,6 @@ async function subHtml(request) {
 	return new Response(HTML, {
 		headers: {
 			"content-type": "text/html;charset=UTF-8",
-			"X-Worker-Build": BUILD_TAG,
 		},
 	});
 }
@@ -949,7 +947,6 @@ export default {
 		const userAgent = userAgentHeader ? userAgentHeader.toLowerCase() : "null";
 		const url = new URL(request.url);
 		const format = url.searchParams.get('format') ? url.searchParams.get('format').toLowerCase() : "null";
-		const formatRequested = format !== "null";
 		let host = "";
 		let uuid = "";
 		let path = "";
@@ -1093,7 +1090,6 @@ export default {
 						return new Response(await nginx(), {
 							headers: {
 								'Content-Type': 'text/html; charset=UTF-8',
-								'X-Worker-Build': BUILD_TAG,
 							},
 						});
 					}
@@ -1122,7 +1118,7 @@ export default {
 
 				return new Response(responseText, {
 					status: 202,
-					headers: { 'content-type': 'text/plain; charset=utf-8', 'X-Worker-Build': BUILD_TAG },
+					headers: { 'content-type': 'text/plain; charset=utf-8' },
 				});
 			}
 
@@ -1139,10 +1135,8 @@ export default {
 			"content-type": "text/plain; charset=utf-8",
 			"Profile-Update-Interval": `${SUBUpdateTime}`,
 			"Profile-web-page-url": url.origin,
-			"X-Worker-Build": BUILD_TAG,
 			//"Subscription-Userinfo": `upload=${UD}; download=${UD}; total=${total}; expire=${expire}`,
 		};
-		let outputFormat = "raw";
 
 		if (host.toLowerCase().includes('notls') || host.toLowerCase().includes('worker') || host.toLowerCase().includes('trycloudflare')) noTLS = 'true';
 		noTLS = env.NOTLS || noTLS;
@@ -1157,7 +1151,6 @@ export default {
 					return new Response(await nginx(), {
 						headers: {
 							'Content-Type': 'text/html; charset=UTF-8',
-							'X-Worker-Build': BUILD_TAG,
 						},
 					});
 				}
@@ -1165,11 +1158,9 @@ export default {
 				return envKey === 'URL302' ? Response.redirect(URL, 302) : fetch(new Request(URL, request));
 			}
 			return await subHtml(request);
-		} else if (((format === 'clash') || (!formatRequested && (userAgent.includes('clash') || userAgent.includes('meta') || userAgent.includes('mihomo')))) && !userAgent.includes('nekobox') && !userAgent.includes('cf-workers-sub')) {
-			outputFormat = "clash";
+		} else if ((userAgent.includes('clash') || userAgent.includes('meta') || userAgent.includes('mihomo') || (format === 'clash' && !isSubConverterRequest)) && !userAgent.includes('nekobox') && !userAgent.includes('cf-workers-sub')) {
 			subConverterUrl = `${subProtocol}://${subConverter}/sub?target=clash&url=${encodeURIComponent(subConverterUrl)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=${scv}&fdn=false&sort=false&new_name=true`;
-		} else if (((format === 'singbox') || (!formatRequested && (userAgent.includes('sing-box') || userAgent.includes('singbox')))) && !userAgent.includes('cf-workers-sub')) {
-			outputFormat = "singbox";
+		} else if ((userAgent.includes('sing-box') || userAgent.includes('singbox') || (format === 'singbox' && !isSubConverterRequest)) && !userAgent.includes('cf-workers-sub')) {
 			if (协议类型 == 'VMess' && url.href.includes('path=')) {
 				const 路径参数前部分 = url.href.split('path=')[0];
 				const parts = url.href.split('path=')[1].split('&');
@@ -1459,22 +1450,15 @@ export default {
 			let subConverterContent = await subConverterResponse.text();
 
 			if (协议类型 == atob('VHJvamFu') && (userAgent.includes('surge') || (format === 'surge' && !isSubConverterRequest)) && !userAgent.includes('cf-workers-sub')) {
-				outputFormat = "surge";
 				subConverterContent = surge(subConverterContent, host, path);
 			}
 			subConverterContent = revertFakeInfo(subConverterContent, uuid, host);
-			if (outputFormat === "singbox") {
-				responseHeaders["content-type"] = "application/json; charset=utf-8";
-			} else if (outputFormat === "clash" || outputFormat === "surge") {
-				responseHeaders["content-type"] = "application/x-yaml; charset=utf-8";
-			}
-			const fileExt = outputFormat === "singbox" ? ".json" : ((outputFormat === "clash" || outputFormat === "surge") ? ".yaml" : "");
-			if (!userAgent.includes('mozilla')) responseHeaders["Content-Disposition"] = `attachment; filename*=utf-8''${encodeURIComponent(FileName + fileExt)}`;
+			if (!userAgent.includes('mozilla')) responseHeaders["Content-Disposition"] = `attachment; filename*=utf-8''${encodeURIComponent(FileName)}`;
 			return new Response(subConverterContent, { headers: responseHeaders });
 		} catch (error) {
 			return new Response(`Error: ${error.message}`, {
 				status: 500,
-				headers: { 'content-type': 'text/plain; charset=utf-8', 'X-Worker-Build': BUILD_TAG },
+				headers: { 'content-type': 'text/plain; charset=utf-8' },
 			});
 		}
 	}
