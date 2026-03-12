@@ -324,6 +324,18 @@ function getRandomProxyByMatch(CC, socks5Data) {
 	return randomProxy;
 }
 
+function shouldKeepNodeLine(line) {
+	if (!line) return false;
+	const hashIndex = line.indexOf('#');
+	if (hashIndex === -1) return true;
+	const remarkEnc = line.slice(hashIndex + 1);
+	let remark = remarkEnc;
+	try {
+		remark = decodeURIComponent(remarkEnc);
+	} catch { }
+	return !remark.includes('加入我的频道');
+}
+
 async function MD5MD5(text) {
 	const encoder = new TextEncoder();
 
@@ -1160,7 +1172,7 @@ export default {
 			return await subHtml(request);
 		} else if ((userAgent.includes('clash') || userAgent.includes('meta') || userAgent.includes('mihomo') || (format === 'clash' && !isSubConverterRequest)) && !userAgent.includes('nekobox') && !userAgent.includes('cf-workers-sub')) {
 			subConverterUrl = `${subProtocol}://${subConverter}/sub?target=clash&url=${encodeURIComponent(subConverterUrl)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=${scv}&fdn=false&sort=false&new_name=true`;
-		} else if ((userAgent.includes('sing-box') || userAgent.includes('singbox') || (format === 'singbox' && !isSubConverterRequest)) && !userAgent.includes('cf-workers-sub')) {
+		} else if ((userAgent.includes('sing-box') || userAgent.includes('singbox') || userAgent.includes('hiddify') || (format === 'singbox' && !isSubConverterRequest)) && !userAgent.includes('cf-workers-sub')) {
 			if (协议类型 == 'VMess' && url.href.includes('path=')) {
 				const 路径参数前部分 = url.href.split('path=')[0];
 				const parts = url.href.split('path=')[1].split('&');
@@ -1404,6 +1416,11 @@ export default {
 				combinedContent += '\n' + notlsresponseBody;
 				console.log("notlsresponseBody: " + notlsresponseBody);
 			}
+
+			combinedContent = combinedContent
+				.split('\n')
+				.filter(shouldKeepNodeLine)
+				.join('\n');
 
 			if (协议类型 == atob('VHJvamFu') && (userAgent.includes('surge') || (format === 'surge' && !isSubConverterRequest)) && !userAgent.includes('cf-workers-sub')) {
 				const 特洛伊Links = combinedContent.split('\n');
