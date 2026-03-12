@@ -16,7 +16,6 @@ freeyx.cloudflare88.eu.org#三网优化-clo
 nrt.xxxxxxxx.nyc.mn#三网优化-nyc
 nrtcfdns.zone.id#三网优化-zon
 saas.sin.fan#三网优化-sin
-tencentapp.cn#三网优化-tenc
 xn--b6gac.eu.org#三网优化-xn-
 777.ai7777777.xyz#三网优化-ai7
 cloudflare.182682.xyz#三网优化-182
