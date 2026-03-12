@@ -46,6 +46,7 @@ let 网络备案 = `<a href='https://t.me/CMLiussss'>萌ICP备-20240707号</a>`;
 let 额外ID = '0';
 let 加密方式 = 'auto';
 let 网站图标, 网站头像, 网站背景, xhttp = '';
+const BUILD_TAG = '2026-03-12-1';
 async function 整理优选列表(api) {
 	if (!api || api.length === 0) return [];
 
@@ -914,6 +915,7 @@ async function subHtml(request) {
 	return new Response(HTML, {
 		headers: {
 			"content-type": "text/html;charset=UTF-8",
+			"X-Worker-Build": BUILD_TAG,
 		},
 	});
 }
@@ -1090,6 +1092,7 @@ export default {
 						return new Response(await nginx(), {
 							headers: {
 								'Content-Type': 'text/html; charset=UTF-8',
+								'X-Worker-Build': BUILD_TAG,
 							},
 						});
 					}
@@ -1118,7 +1121,7 @@ export default {
 
 				return new Response(responseText, {
 					status: 202,
-					headers: { 'content-type': 'text/plain; charset=utf-8' },
+					headers: { 'content-type': 'text/plain; charset=utf-8', 'X-Worker-Build': BUILD_TAG },
 				});
 			}
 
@@ -1135,6 +1138,7 @@ export default {
 			"content-type": "text/plain; charset=utf-8",
 			"Profile-Update-Interval": `${SUBUpdateTime}`,
 			"Profile-web-page-url": url.origin,
+			"X-Worker-Build": BUILD_TAG,
 			//"Subscription-Userinfo": `upload=${UD}; download=${UD}; total=${total}; expire=${expire}`,
 		};
 		let outputFormat = "raw";
@@ -1152,6 +1156,7 @@ export default {
 					return new Response(await nginx(), {
 						headers: {
 							'Content-Type': 'text/html; charset=UTF-8',
+							'X-Worker-Build': BUILD_TAG,
 						},
 					});
 				}
@@ -1468,7 +1473,7 @@ export default {
 		} catch (error) {
 			return new Response(`Error: ${error.message}`, {
 				status: 500,
-				headers: { 'content-type': 'text/plain; charset=utf-8' },
+				headers: { 'content-type': 'text/plain; charset=utf-8', 'X-Worker-Build': BUILD_TAG },
 			});
 		}
 	}
