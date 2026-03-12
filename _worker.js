@@ -949,6 +949,7 @@ export default {
 		const userAgent = userAgentHeader ? userAgentHeader.toLowerCase() : "null";
 		const url = new URL(request.url);
 		const format = url.searchParams.get('format') ? url.searchParams.get('format').toLowerCase() : "null";
+		const formatRequested = format !== "null";
 		let host = "";
 		let uuid = "";
 		let path = "";
@@ -1164,10 +1165,10 @@ export default {
 				return envKey === 'URL302' ? Response.redirect(URL, 302) : fetch(new Request(URL, request));
 			}
 			return await subHtml(request);
-		} else if ((userAgent.includes('clash') || userAgent.includes('meta') || userAgent.includes('mihomo') || (format === 'clash' && !isSubConverterRequest)) && !userAgent.includes('nekobox') && !userAgent.includes('cf-workers-sub')) {
+		} else if (((format === 'clash') || (!formatRequested && (userAgent.includes('clash') || userAgent.includes('meta') || userAgent.includes('mihomo')))) && !userAgent.includes('nekobox') && !userAgent.includes('cf-workers-sub')) {
 			outputFormat = "clash";
 			subConverterUrl = `${subProtocol}://${subConverter}/sub?target=clash&url=${encodeURIComponent(subConverterUrl)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=${scv}&fdn=false&sort=false&new_name=true`;
-		} else if ((userAgent.includes('sing-box') || userAgent.includes('singbox') || (format === 'singbox' && !isSubConverterRequest)) && !userAgent.includes('cf-workers-sub')) {
+		} else if (((format === 'singbox') || (!formatRequested && (userAgent.includes('sing-box') || userAgent.includes('singbox')))) && !userAgent.includes('cf-workers-sub')) {
 			outputFormat = "singbox";
 			if (协议类型 == 'VMess' && url.href.includes('path=')) {
 				const 路径参数前部分 = url.href.split('path=')[0];
