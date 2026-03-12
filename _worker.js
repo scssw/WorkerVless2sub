@@ -489,7 +489,7 @@ async function subHtml(request) {
 					}
 					
 					body {
-						${网站背景}
+						${https://i.pinimg.com/1200x/68/7b/28/687b287b0f3bf8b0ab1086dc92ffeb0e.jpg}
 						background-size: cover;
 						background-position: center;
 						background-attachment: fixed;
@@ -859,6 +859,12 @@ async function subHtml(request) {
 							alert('请输入节点链接');
 							return;
 						}
+						// 订阅名（支持 URL #fragment 作为订阅备注）
+						let remark = '';
+						if (link.includes('#')) {
+							remark = link.split('#').slice(1).join('#');
+						}
+
 						
 						let uuidType = 'uuid';
 						const 是特洛伊 = link.startsWith(atob(atob('ZEhKdmFtRnVPaTh2')));
@@ -879,6 +885,7 @@ async function subHtml(request) {
 								const alterId = vmessJson.aid || 0;
 								const security = vmessJson.scy || 'auto';
 								const domain = window.location.hostname;
+								if (!remark && vmessJson.ps) remark = vmessJson.ps;
 								
 								subLink = \`https://\${domain}/sub?host=\${host}&uuid=\${uuid}&path=\${encodeURIComponent(path)}&sni=\${sni}&type=\${type}&alpn=\${encodeURIComponent(alpn)}&alterid=\${alterId}&security=\${security}\`;
 							} else {
@@ -887,6 +894,15 @@ async function subHtml(request) {
 								const domain = window.location.hostname;
 								
 								subLink = \`https://\${domain}/sub?\${uuidType}=\${uuid}&\${search}\`;
+							}
+							if (remark) {
+								let normalizedRemark = remark;
+								try {
+									normalizedRemark = encodeURIComponent(decodeURIComponent(remark));
+								} catch (e) {
+									normalizedRemark = encodeURIComponent(remark);
+								}
+								subLink += `#${normalizedRemark}`;
 							}
 							document.getElementById('result').value = subLink;
 	
