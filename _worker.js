@@ -1130,337 +1130,84 @@ export default {
 			}
 		}
 
-		// 构建订阅响应头对象
-		const responseHeaders = {
-			"content-type": "application/octet-stream; charset=utf-8",
-			"Profile-Update-Interval": `${SUBUpdateTime}`,
-			"Profile-web-page-url": url.origin,
-			//"Subscription-Userinfo": `upload=${UD}; download=${UD}; total=${total}; expire=${expire}`,
-		};
+        // 构建订阅响应头对象
+        const responseHeaders = {
+            "Profile-Update-Interval": `${SUBUpdateTime}`,
+            "Profile-web-page-url": url.origin,
+            "Subscription-Userinfo": `upload=${UD}; download=${UD}; total=${total}; expire=${expire}`,
+        };        
 
-		if (host.toLowerCase().includes('notls') || host.toLowerCase().includes('worker') || host.toLowerCase().includes('trycloudflare')) noTLS = 'true';
-		noTLS = env.NOTLS || noTLS;
-		let subConverterUrl = generateFakeInfo(url.href, uuid, host);
-		const isSubConverterRequest = request.headers.get('subconverter-request') || request.headers.get('subconverter-version') || userAgent.includes('subconverter');
-		if (isSubConverterRequest) alpn = '';
-		if (!isSubConverterRequest && MamaJustKilledAMan.some(PutAGunAgainstHisHeadPulledMyTriggerNowHesDead => userAgent.includes(PutAGunAgainstHisHeadPulledMyTriggerNowHesDead)) && MamaJustKilledAMan.length > 0) {
-			const envKey = env.URL302 ? 'URL302' : (env.URL ? 'URL' : null);
-			if (envKey) {
-				const URLs = await 整理(env[envKey]);
-				if (URLs.includes('nginx')) {
-					return new Response(await nginx(), {
-						headers: {
-							'Content-Type': 'text/html; charset=UTF-8',
-						},
-					});
-				}
-				const URL = URLs[Math.floor(Math.random() * URLs.length)];
-				return envKey === 'URL302' ? Response.redirect(URL, 302) : fetch(new Request(URL, request));
-			}
-			return await subHtml(request);
-		} else if ((userAgent.includes('clash') || userAgent.includes('meta') || userAgent.includes('mihomo') || (format === 'clash' && !isSubConverterRequest)) && !userAgent.includes('nekobox') && !userAgent.includes('cf-workers-sub')) {
-			subConverterUrl = `${subProtocol}://${subConverter}/sub?target=clash&url=${encodeURIComponent(subConverterUrl)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=${scv}&fdn=false&sort=false&new_name=true`;
-		} else if ((userAgent.includes('sing-box') || userAgent.includes('singbox') || (format === 'singbox' && !isSubConverterRequest)) && !userAgent.includes('cf-workers-sub')) {
-			if (协议类型 == 'VMess' && url.href.includes('path=')) {
-				const 路径参数前部分 = url.href.split('path=')[0];
-				const parts = url.href.split('path=')[1].split('&');
-				const 路径参数后部分 = parts.slice(1).join('&') || '';
-				const 待处理路径参数 = url.href.split('path=')[1].split('&')[0] || '';
-				if (待处理路径参数.includes('%3F')) subConverterUrl = generateFakeInfo(路径参数前部分 + 'path=' + 待处理路径参数.split('%3F')[0] + '&' + 路径参数后部分, uuid, host);
-			}
-			subConverterUrl = `${subProtocol}://${subConverter}/sub?target=singbox&url=${encodeURIComponent(subConverterUrl)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&tfo=false&scv=${scv}&fdn=false&sort=false&new_name=true`;
-		} else {
-			if (host.includes('workers.dev')) {
-				if (临时中转域名接口) {
-					try {
-						const response = await fetch(临时中转域名接口);
+        // 去掉 attachment 防止浏览器下载
+        delete responseHeaders["Content-Disposition"];        
 
-						if (!response.ok) {
-							console.error('获取地址时出错:', response.status, response.statusText);
-							return; // 如果有错误，直接返回
-						}
+        // 检测请求格式参数
+        const requestedFormat = url.searchParams.get('format') || 'singbox';
+        let responseBody;        
 
-						const text = await response.text();
-						const lines = text.split('\n');
-						// 过滤掉空行或只包含空白字符的行
-						const nonEmptyLines = lines.filter(line => line.trim() !== '');
+        if (requestedFormat === 'singbox') {
+            // sing-box JSON 输出，Hiddify 可识别
+            responseBody = JSON.stringify({
+                outbounds: combinedContent.split('\n').map(line => {
+                    if (!line) return null;
+                    let node;
+                    if (line.startsWith('vmess://')) {
+                        const nodeJson = JSON.parse(atob(line.slice(8)));
+                        node = {
+                            type: 'vless',
+                            tag: nodeJson.ps || 'vmess-node',
+                            server: nodeJson.add,
+                            port: parseInt(nodeJson.port),
+                            uuid: nodeJson.id,
+                            encryption: 'none',
+                            network: nodeJson.net || 'ws',
+                            "ws-path": nodeJson.path || '/',
+                            tls: nodeJson.tls === 'tls'
+                        };
+                    } else if (line.startsWith('vless://')) {
+                        const m = line.match(/^vless:\/\/([^@]+)@([^:]+):(\d+)\??(.*)$/);
+                        if (!m) return null;
+                        const params = Object.fromEntries(new URLSearchParams(m[4]));
+                        node = {
+                            type: 'vless',
+                            tag: params.ps || 'vless-node',
+                            server: m[2],
+                            port: parseInt(m[3]),
+                            uuid: m[1],
+                            encryption: 'none',
+                            network: params.type || 'tcp',
+                            "ws-path": params.path || '/',
+                            tls: params.security === 'tls'
+                        };
+                    } else if (line.startsWith('trojan://')) {
+                        const m = line.match(/^trojan:\/\/([^@]+)@([^:]+):(\d+)\??(.*)$/);
+                        if (!m) return null;
+                        const params = Object.fromEntries(new URLSearchParams(m[4]));
+                        node = {
+                            type: 'trojan',
+                            tag: params.ps || 'trojan-node',
+                            server: m[2],
+                            port: parseInt(m[3]),
+                            password: m[1],
+                            network: params.type || 'tcp',
+                            "ws-path": params.path || '/',
+                            tls: params.security === 'tls'
+                        };
+                    }
+                    return node;
+                }).filter(n => n)
+            }, null, 2);
+            responseHeaders["content-type"] = "application/json; charset=utf-8";        
 
-						临时中转域名 = 临时中转域名.concat(nonEmptyLines);
-					} catch (error) {
-						console.error('获取地址时出错:', error);
-					}
-				}
-				// 使用Set对象去重
-				临时中转域名 = [...new Set(临时中转域名)];
-			}
+        } else if (requestedFormat === 'base64') {
+            // base64 输出，Clash / Shadowrocket 可用
+            responseBody = btoa(combinedContent);
+            responseHeaders["content-type"] = "text/plain; charset=utf-8";        
 
-			const newAddressesapi = await 整理优选列表(addressesapi);
-			const newAddressescsv = await 整理测速结果('TRUE');
-			const uniqueAddresses = Array.from(new Set(addresses.concat(newAddressesapi, newAddressescsv).filter(item => item && item.trim())));
+        } else if (requestedFormat === 'clash') {
+            // clash YAML 输出
+            responseBody = generateClashYAML(combinedContent.split('\n'));
+            responseHeaders["content-type"] = "text/plain; charset=utf-8";
+        }        
 
-			let notlsresponseBody;
-			if ((noTLS == 'true' && 协议类型 == atob(`\u0056\u006b\u0078\u0046\u0055\u0031\u004d\u003d`)) || 协议类型 == 'VMess') {
-				const newAddressesnotlsapi = await 整理优选列表(addressesnotlsapi);
-				const newAddressesnotlscsv = await 整理测速结果('FALSE');
-				const uniqueAddressesnotls = Array.from(new Set(addressesnotls.concat(newAddressesnotlsapi, newAddressesnotlscsv).filter(item => item && item.trim())));
-
-				notlsresponseBody = uniqueAddressesnotls.map(address => {
-					let port = "-1";
-					let addressid = address;
-
-					const match = addressid.match(regex);
-					if (!match) {
-						if (address.includes(':') && address.includes('#')) {
-							const parts = address.split(':');
-							address = parts[0];
-							const subParts = parts[1].split('#');
-							port = subParts[0];
-							addressid = subParts[1];
-						} else if (address.includes(':')) {
-							const parts = address.split(':');
-							address = parts[0];
-							port = parts[1];
-						} else if (address.includes('#')) {
-							const parts = address.split('#');
-							address = parts[0];
-							addressid = parts[1];
-						}
-
-						if (addressid.includes(':')) {
-							addressid = addressid.split(':')[0];
-						}
-					} else {
-						address = match[1];
-						port = match[2] || port;
-						addressid = match[3] || address;
-					}
-
-					const httpPorts = ["8080", "8880", "2052", "2082", "2086", "2095"];
-					if (!isValidIPv4(address) && port == "-1") {
-						for (let httpPort of httpPorts) {
-							if (address.includes(httpPort)) {
-								port = httpPort;
-								break;
-							}
-						}
-					}
-					if (port == "-1") port = "80";
-					//console.log(address, port, addressid);
-
-					if (隧道版本作者.trim() === atob('Y21saXU=') && 获取代理IP.trim() === 'true') {
-						// 将addressid转换为小写
-						let lowerAddressid = addressid.toLowerCase();
-						// 初始化找到的proxyIP为null
-						let foundProxyIP = null;
-
-						if (socks5Data) {
-							const socks5 = getRandomProxyByMatch(lowerAddressid, socks5Data);
-							path = `/${socks5}`;
-						} else {
-							// 遍历匹配PROXYIP数组查找匹配项
-							for (let item of 匹配PROXYIP) {
-								if (item.includes('#') && item.split('#')[1] && lowerAddressid.includes(item.split('#')[1].toLowerCase())) {
-									foundProxyIP = item.split('#')[0];
-									break; // 找到匹配项，跳出循环
-								} else if (item.includes(':') && item.split(':')[1] && lowerAddressid.includes(item.split(':')[1].toLowerCase())) {
-									foundProxyIP = item.split(':')[0];
-									break; // 找到匹配项，跳出循环
-								}
-							}
-
-							if (foundProxyIP) {
-								// 如果找到匹配的proxyIP，赋值给path
-								path = atob('L3Byb3h5aXA9') + foundProxyIP;
-							} else {
-								// 如果没有找到匹配项，随机选择一个proxyIP
-								const randomProxyIP = proxyIPs[Math.floor(Math.random() * proxyIPs.length)];
-								path = atob('L3Byb3h5aXA9') + randomProxyIP;
-							}
-						}
-					}
-
-					if (协议类型 == 'VMess') {
-						const vmessLink = `vmess://${utf8ToBase64(`{"v":"2","ps":"${addressid + EndPS}","add":"${address}","port":"${port}","id":"${uuid}","aid":"${额外ID}","scy":"${加密方式}","net":"ws","type":"${type}","host":"${host}","path":"${path}","tls":"","sni":"","alpn":"${encodeURIComponent(alpn)}","fp":""}`)}`;
-						return vmessLink;
-					} else {
-						const 为烈士Link = `${atob(atob('ZG14bGMzTTZMeTg9')) + uuid}@${address}:${port}?security=&type=${type}&host=${host}&path=${encodeURIComponent(path)}&encryption=none#${encodeURIComponent(addressid + EndPS)}`;
-						return 为烈士Link;
-					}
-
-				}).join('\n');
-			}
-
-			const responseBody = uniqueAddresses.map(address => {
-				let port = "-1";
-				let addressid = address;
-
-				const match = addressid.match(regex);
-				if (!match) {
-					if (address.includes(':') && address.includes('#')) {
-						const parts = address.split(':');
-						address = parts[0];
-						const subParts = parts[1].split('#');
-						port = subParts[0];
-						addressid = subParts[1];
-					} else if (address.includes(':')) {
-						const parts = address.split(':');
-						address = parts[0];
-						port = parts[1];
-					} else if (address.includes('#')) {
-						const parts = address.split('#');
-						address = parts[0];
-						addressid = parts[1];
-					}
-
-					if (addressid.includes(':')) {
-						addressid = addressid.split(':')[0];
-					}
-				} else {
-					address = match[1];
-					port = match[2] || port;
-					addressid = match[3] || address;
-				}
-
-				if (!isValidIPv4(address) && port == "-1") {
-					for (let httpsPort of httpsPorts) {
-						if (address.includes(httpsPort)) {
-							port = httpsPort;
-							break;
-						}
-					}
-				}
-				if (port == "-1") port = "443";
-
-				//console.log(address, port, addressid);
-
-				if (隧道版本作者.trim() === atob('Y21saXU=') && 获取代理IP.trim() === 'true') {
-					// 将addressid转换为小写
-					let lowerAddressid = addressid.toLowerCase();
-					// 初始化找到的proxyIP为null
-					let foundProxyIP = null;
-
-					if (socks5Data) {
-						const socks5 = getRandomProxyByMatch(lowerAddressid, socks5Data);
-						path = `/${socks5}`;
-					} else {
-						// 遍历匹配PROXYIP数组查找匹配项
-						for (let item of 匹配PROXYIP) {
-							if (item.includes('#') && item.split('#')[1] && lowerAddressid.includes(item.split('#')[1].toLowerCase())) {
-								foundProxyIP = item.split('#')[0];
-								break; // 找到匹配项，跳出循环
-							} else if (item.includes(':') && item.split(':')[1] && lowerAddressid.includes(item.split(':')[1].toLowerCase())) {
-								foundProxyIP = item.split(':')[0];
-								break; // 找到匹配项，跳出循环
-							}
-						}
-
-						const matchingProxyIP = proxyIPPool.find(proxyIP => proxyIP.includes(address));
-						if (matchingProxyIP) {
-							path = atob('L3Byb3h5aXA9') + matchingProxyIP;
-						} else if (foundProxyIP) {
-							// 如果找到匹配的proxyIP，赋值给path
-							path = atob('L3Byb3h5aXA9') + foundProxyIP;
-						} else {
-							// 如果没有找到匹配项，随机选择一个proxyIP
-							const randomProxyIP = proxyIPs[Math.floor(Math.random() * proxyIPs.length)];
-							path = atob('L3Byb3h5aXA9') + randomProxyIP;
-						}
-					}
-				}
-
-				let 伪装域名 = host;
-				let 最终路径 = path;
-				let 节点备注 = EndPS;
-				if (临时中转域名.length > 0 && (host.includes('.workers.dev'))) {
-					最终路径 = `/${host}${path}`;
-					伪装域名 = 临时中转域名[Math.floor(Math.random() * 临时中转域名.length)];
-					节点备注 = EndPS + atob('IOW3suWQr+eUqOS4tOaXtuWfn+WQjeS4rei9rOacjeWKoe+8jOivt+WwveW/q+e7keWumuiHquWumuS5ieWfn++8gQ==');
-					sni = 伪装域名;
-				}
-
-				if (协议类型 == 'VMess') {
-					const vmessLink = `vmess://${utf8ToBase64(`{"v":"2","ps":"${addressid + 节点备注}","add":"${address}","port":"${port}","id":"${uuid}","aid":"${额外ID}","scy":"${加密方式}","net":"ws","type":"${type}","host":"${伪装域名}","path":"${最终路径}","tls":"tls","sni":"${sni}","alpn":"${encodeURIComponent(alpn)}","fp":"","allowInsecure":"${scv == 'true' ? '1' : '0'}","fragment":"1,40-60,30-50,tlshello"}`)}`;
-					return vmessLink;
-				} else if (协议类型 == atob('VHJvamFu')) {
-					const 特洛伊Link = `${atob(atob('ZEhKdmFtRnVPaTh2')) + uuid}@${address}:${port}?security=tls&sni=${sni}&alpn=${encodeURIComponent(alpn)}&fp=random&type=${type}&host=${伪装域名}&path=${encodeURIComponent(最终路径) + (scv == 'true' ? '&allowInsecure=1' : '')}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}#${encodeURIComponent(addressid + 节点备注)}`;
-					return 特洛伊Link;
-				} else {
-					const 为烈士Link = `${atob(atob('ZG14bGMzTTZMeTg9')) + uuid}@${address}:${port}?security=tls&sni=${sni}&alpn=${encodeURIComponent(alpn)}&fp=random&type=${type}&host=${伪装域名}&path=${encodeURIComponent(最终路径) + xhttp + (scv == 'true' ? '&allowInsecure=1' : '')}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}&encryption=none#${encodeURIComponent(addressid + 节点备注)}`;
-					return 为烈士Link;
-				}
-
-			}).join('\n');
-
-			let combinedContent = responseBody; // 合并内容
-
-			if (link) {
-				const links = await 整理(link);
-				const 整理节点LINK = (await getLink(links)).join('\n');
-				combinedContent += '\n' + 整理节点LINK;
-				console.log("link: " + 整理节点LINK)
-			}
-
-			if (notlsresponseBody && noTLS == 'true') {
-				combinedContent += '\n' + notlsresponseBody;
-				console.log("notlsresponseBody: " + notlsresponseBody);
-			}
-
-			if (协议类型 == atob('VHJvamFu') && (userAgent.includes('surge') || (format === 'surge' && !isSubConverterRequest)) && !userAgent.includes('cf-workers-sub')) {
-				const 特洛伊Links = combinedContent.split('\n');
-				const 特洛伊LinksJ8 = generateFakeInfo(特洛伊Links.join('|'), uuid, host);
-				subConverterUrl = `${subProtocol}://${subConverter}/sub?target=surge&ver=4&url=${encodeURIComponent(特洛伊LinksJ8)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=true&list=false&xudp=false&udp=false&tfo=false&expand=true&scv=${scv}&fdn=false`;
-			} else {
-				let base64Response;
-				try {
-					base64Response = btoa(combinedContent); // 重新进行 Base64 编码
-				} catch (e) {
-					function encodeBase64(data) {
-						const binary = new TextEncoder().encode(data);
-						let base64 = '';
-						const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-						for (let i = 0; i < binary.length; i += 3) {
-							const byte1 = binary[i];
-							const byte2 = binary[i + 1] || 0;
-							const byte3 = binary[i + 2] || 0;
-
-							base64 += chars[byte1 >> 2];
-							base64 += chars[((byte1 & 3) << 4) | (byte2 >> 4)];
-							base64 += chars[((byte2 & 15) << 2) | (byte3 >> 6)];
-							base64 += chars[byte3 & 63];
-						}
-
-						const padding = 3 - (binary.length % 3 || 3);
-						return base64.slice(0, base64.length - padding) + '=='.slice(0, padding);
-					}
-					base64Response = encodeBase64(combinedContent);
-				}
-				const response = new Response(base64Response, { headers: responseHeaders });
-				return response;
-			}
-		}
-
-		try {
-			const subConverterResponse = await fetch(subConverterUrl, { headers: { 'User-Agent': `v2rayN/${FileName + atob('IChodHRwczovL2dpdGh1Yi5jb20vY21saXUvRWRnZU9uZS1QYWdlcy1CZXN0SVAyU1VCKQ==')}` } });
-
-			if (!subConverterResponse.ok) {
-				throw new Error(`Error fetching subConverterUrl: ${subConverterResponse.status} ${subConverterResponse.statusText}`);
-			}
-
-			let subConverterContent = await subConverterResponse.text();
-
-			if (协议类型 == atob('VHJvamFu') && (userAgent.includes('surge') || (format === 'surge' && !isSubConverterRequest)) && !userAgent.includes('cf-workers-sub')) {
-				subConverterContent = surge(subConverterContent, host, path);
-			}
-			subConverterContent = revertFakeInfo(subConverterContent, uuid, host);
-			if (!userAgent.includes('mozilla')) responseHeaders["Content-Disposition"] = `attachment; filename*=utf-8''${encodeURIComponent(FileName)}`;
-			return new Response(subConverterContent, { headers: responseHeaders });
-		} catch (error) {
-			return new Response(`Error: ${error.message}`, {
-				status: 500,
-				headers: { 'content-type': 'text/plain; charset=utf-8' },
-			});
-		}
-	}
-};
-
+        // 返回响应
+        return new Response(responseBody, { headers: responseHeaders });
