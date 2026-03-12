@@ -1135,7 +1135,7 @@ export default {
 			"content-type": "application/octet-stream; charset=utf-8",
 			"Profile-Update-Interval": `${SUBUpdateTime}`,
 			"Profile-web-page-url": url.origin,
-			#"Subscription-Userinfo": `upload=${UD}; download=${UD}; total=${total}; expire=${expire}`,
+			//"Subscription-Userinfo": `upload=${UD}; download=${UD}; total=${total}; expire=${expire}`,
 		};
 
 		if (host.toLowerCase().includes('notls') || host.toLowerCase().includes('worker') || host.toLowerCase().includes('trycloudflare')) noTLS = 'true';
