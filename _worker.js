@@ -489,7 +489,7 @@ async function subHtml(request) {
 					}
 					
 					body {
-						${https://i.pinimg.com/1200x/68/7b/28/687b287b0f3bf8b0ab1086dc92ffeb0e.jpg}
+						background-image: url("https://i.pinimg.com/1200x/68/7b/28/687b287b0f3bf8b0ab1086dc92ffeb0e.jpg");
 						background-size: cover;
 						background-position: center;
 						background-attachment: fixed;
