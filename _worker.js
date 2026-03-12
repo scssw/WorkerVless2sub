@@ -902,6 +902,8 @@ async function subHtml(request) {
 								} catch (e) {
 									normalizedRemark = encodeURIComponent(remark);
 								}
+								// 火箭等客户端有时不解码 %3A，手动还原常见字符
+								normalizedRemark = normalizedRemark.replace(/%3A/gi, ':');
 								subLink += '#' + normalizedRemark;
 							}
 							document.getElementById('result').value = subLink;
