@@ -4,10 +4,8 @@ cdns.doon.eu.org#三网优化-doo
 cf.0sm.com#三网优化-0sm
 cf.877771.xyz#三网优化-877
 cf.877774.xyz#三网优化-877
-cf.900501.xyz#三网优化-900
 cfip.1323123.xyz#三网优化-132
 cfip.cfcdn.vip#三网优化-cfc
-cfip.xxxxxxxx.tk#三网优化-xxx
 cloudflare.182682.xyz#三网优化-182
 cloudflare-dl.byoip.top#三网优化-byo
 cloudflare-ip.mofashi.ltd#三网优化-mof
