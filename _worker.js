@@ -902,7 +902,7 @@ async function subHtml(request) {
 								} catch (e) {
 									normalizedRemark = encodeURIComponent(remark);
 								}
-								subLink += `#${normalizedRemark}`;
+								subLink += '#' + normalizedRemark;
 							}
 							document.getElementById('result').value = subLink;
 	
