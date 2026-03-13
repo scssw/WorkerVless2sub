@@ -904,7 +904,7 @@ async function subHtml(request) {
 								}
 								// 火箭等客户端有时不解码 %3A，手动还原常见字符
 								normalizedRemark = normalizedRemark.replace(/%3A/gi, ':');
-								subLink += '#' + normalizedRemark;
+								subLink += '&remark=' + normalizedRemark;
 							}
 							document.getElementById('result').value = subLink;
 	
@@ -965,6 +965,16 @@ export default {
 		const userAgent = userAgentHeader ? userAgentHeader.toLowerCase() : "null";
 		const url = new URL(request.url);
 		const format = url.searchParams.get('format') ? url.searchParams.get('format').toLowerCase() : "null";
+		const rawRemark = url.searchParams.get('remark');
+		let profileTitle = '';
+		if (rawRemark) {
+			try {
+				profileTitle = decodeURIComponent(rawRemark);
+			} catch (e) {
+				profileTitle = rawRemark;
+			}
+			profileTitle = profileTitle.replace(/[\r\n]/g, ' ').trim();
+		}
 		let host = "";
 		let uuid = "";
 		let path = "";
@@ -1155,6 +1165,8 @@ export default {
 			"Profile-web-page-url": url.origin,
 			//"Subscription-Userinfo": `upload=${UD}; download=${UD}; total=${total}; expire=${expire}`,
 		};
+		if (profileTitle) responseHeaders["Profile-Title"] = profileTitle;
+
 
 		if (host.toLowerCase().includes('notls') || host.toLowerCase().includes('worker') || host.toLowerCase().includes('trycloudflare')) noTLS = 'true';
 		noTLS = env.NOTLS || noTLS;
