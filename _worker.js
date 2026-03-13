@@ -880,10 +880,11 @@ async function subHtml(request) {
 										} catch (e) {
 											normalizedRemark = encodeURIComponent(remark);
 										}
-										normalizedRemark = normalizedRemark.replace(/%3A/gi, ':');
+										const displayRemark = normalizedRemark.replace(/%3A/gi, ':');
 										u.searchParams.set('remark', normalizedRemark);
+										u.hash = displayRemark;
 									}
-									u.hash = '';
+									if (!remark) u.hash = '';
 									subLink = u.toString();
 									document.getElementById('result').value = subLink;
 									const qrcodeDiv = document.getElementById('qrcode');
@@ -938,8 +939,9 @@ async function subHtml(request) {
 									normalizedRemark = encodeURIComponent(remark);
 								}
 								// 火箭等客户端有时不解码 %3A，手动还原常见字符
-								normalizedRemark = normalizedRemark.replace(/%3A/gi, ':');
+								const displayRemark = normalizedRemark.replace(/%3A/gi, ':');
 								subLink += '&remark=' + normalizedRemark;
+								subLink += '#' + displayRemark;
 							}
 							document.getElementById('result').value = subLink;
 	
