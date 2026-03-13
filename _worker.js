@@ -866,10 +866,45 @@ async function subHtml(request) {
 						}
 
 						
+						// 如果输入本身是订阅链接，直接规范化后返回
+						let subLink = '';
+						if (link.toLowerCase().startsWith('http')) {
+							try {
+								const u = new URL(link);
+								if (u.pathname.includes('/sub')) {
+									if (!remark) remark = u.searchParams.get('remark') || (u.hash ? u.hash.slice(1) : '');
+									if (remark) {
+										let normalizedRemark = remark;
+										try {
+											normalizedRemark = encodeURIComponent(decodeURIComponent(remark));
+										} catch (e) {
+											normalizedRemark = encodeURIComponent(remark);
+										}
+										normalizedRemark = normalizedRemark.replace(/%3A/gi, ':');
+										u.searchParams.set('remark', normalizedRemark);
+									}
+									u.hash = '';
+									subLink = u.toString();
+									document.getElementById('result').value = subLink;
+									const qrcodeDiv = document.getElementById('qrcode');
+									qrcodeDiv.innerHTML = '';
+									new QRCode(qrcodeDiv, {
+										text: subLink,
+										width: 220,
+										height: 220,
+										colorDark: "#4a60ea",
+										colorLight: "#ffffff",
+										correctLevel: QRCode.CorrectLevel.L,
+										scale: 1
+									});
+									return;
+								}
+							} catch (e) {}
+						}
+
 						let uuidType = 'uuid';
 						const 是特洛伊 = link.startsWith(atob(atob('ZEhKdmFtRnVPaTh2')));
 						if (是特洛伊) uuidType = 'password';
-						let subLink = '';
 						try {
 							const isVMess = link.startsWith('vmess://');
 							if (isVMess){
