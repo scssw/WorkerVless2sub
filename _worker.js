@@ -46,6 +46,19 @@ let 网络备案 = `<a href='https://t.me/CMLiussss'>萌ICP备-20240707号</a>`;
 let 额外ID = '0';
 let 加密方式 = 'auto';
 let 网站图标, 网站头像, 网站背景, xhttp = '';
+const SIMPLE_CLASH_CONFIG = [
+	"[custom]",
+	"enable_rule_generator=true",
+	"overwrite_original_rules=true",
+	"",
+	"; only one auto group (url-test)",
+	"; format: custom_proxy_group=Name`url-test`Rule`TestURL`interval,timeout,tolerance",
+	"custom_proxy_group=自动选择`url-test`.*`https://www.gstatic.com/generate_204`300,5,50",
+	"",
+	"; route everything to the only group",
+	"ruleset=自动选择,[]FINAL",
+	""
+].join("\n");
 async function 整理优选列表(api) {
 	if (!api || api.length === 0) return [];
 
@@ -985,7 +998,7 @@ export default {
 		} else {
 			subConverter = subConverter.split("//")[1] || subConverter;
 		}
-		subConfig = env.SUBCONFIG || subConfig;
+		const envSubConfig = env.SUBCONFIG || '';
 		FileName = env.SUBNAME || FileName;
 		socks5DataURL = env.SOCKS5DATA || socks5DataURL;
 		if (env.CMPROXYIPS) 匹配PROXYIP = await 整理(env.CMPROXYIPS);;
@@ -1001,6 +1014,12 @@ export default {
 		const userAgentHeader = request.headers.get('User-Agent');
 		const userAgent = userAgentHeader ? userAgentHeader.toLowerCase() : "null";
 		const url = new URL(request.url);
+		subConfig = envSubConfig || `${url.origin}/subconfig`;
+		if (url.pathname === '/subconfig') {
+			return new Response(SIMPLE_CLASH_CONFIG, {
+				headers: { "content-type": "text/plain; charset=utf-8" }
+			});
+		}
 		const format = url.searchParams.get('format') ? url.searchParams.get('format').toLowerCase() : "null";
 		const rawRemark = url.searchParams.get('remark');
 		let profileTitle = '';
@@ -1017,6 +1036,9 @@ export default {
 		let path = "";
 		let sni = "";
 		let type = "ws";
+		let fp = "";
+		let fragment = "";
+		let transportSecurity = "tls";
 		let scv = env.SCV || 'false';
 		alpn = env.ALPN || alpn;
 		let UD = Math.floor(((timestamp - Date.now()) / timestamp * 99 * 1099511627776) / 2);
@@ -1129,6 +1151,9 @@ export default {
 			path = url.searchParams.get('path');
 			sni = url.searchParams.get('sni') || host;
 			type = url.searchParams.get('type') || type;
+			fp = url.searchParams.get('fp') || fp;
+			fragment = "";
+			transportSecurity = url.searchParams.get('security') || transportSecurity;
 			scv = url.searchParams.get('allowInsecure') == '1' ? 'true' : (url.searchParams.get('scv') || scv);
 			const mode = url.searchParams.get('mode') || null;
 			const extra = url.searchParams.get('extra') || null;
@@ -1357,6 +1382,10 @@ export default {
 				}).join('\n');
 			}
 
+			const fpParam = fp ? `&fp=${encodeURIComponent(fp)}` : '';
+			const fragmentParam = '';
+			const securityParam = transportSecurity ? `security=${transportSecurity}` : 'security=tls';
+
 			const responseBody = uniqueAddresses.map(address => {
 				let port = "-1";
 				let addressid = address;
@@ -1449,10 +1478,10 @@ export default {
 					const vmessLink = `vmess://${utf8ToBase64(`{"v":"2","ps":"${addressid + 节点备注}","add":"${address}","port":"${port}","id":"${uuid}","aid":"${额外ID}","scy":"${加密方式}","net":"ws","type":"${type}","host":"${伪装域名}","path":"${最终路径}","tls":"tls","sni":"${sni}","alpn":"${encodeURIComponent(alpn)}","fp":"","allowInsecure":"${scv == 'true' ? '1' : '0'}","fragment":"1,40-60,30-50,tlshello"}`)}`;
 					return vmessLink;
 				} else if (协议类型 == atob('VHJvamFu')) {
-					const 特洛伊Link = `${atob(atob('ZEhKdmFtRnVPaTh2')) + uuid}@${address}:${port}?security=tls&sni=${sni}&alpn=${encodeURIComponent(alpn)}&fp=random&type=${type}&host=${伪装域名}&path=${encodeURIComponent(最终路径) + (scv == 'true' ? '&allowInsecure=1' : '')}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}#${encodeURIComponent(addressid + 节点备注)}`;
+					const 特洛伊Link = `${atob(atob('ZEhKdmFtRnVPaTh2')) + uuid}@${address}:${port}?${securityParam}&sni=${sni}&alpn=${encodeURIComponent(alpn)}${fpParam}&type=${type}&host=${伪装域名}&path=${encodeURIComponent(最终路径) + (scv == 'true' ? '&allowInsecure=1' : '')}${fragmentParam}#${encodeURIComponent(addressid + 节点备注)}`;
 					return 特洛伊Link;
 				} else {
-					const 为烈士Link = `${atob(atob('ZG14bGMzTTZMeTg9')) + uuid}@${address}:${port}?security=tls&sni=${sni}&alpn=${encodeURIComponent(alpn)}&fp=random&type=${type}&host=${伪装域名}&path=${encodeURIComponent(最终路径) + xhttp + (scv == 'true' ? '&allowInsecure=1' : '')}&fragment=${encodeURIComponent('1,40-60,30-50,tlshello')}&encryption=none#${encodeURIComponent(addressid + 节点备注)}`;
+					const 为烈士Link = `${atob(atob('ZG14bGMzTTZMeTg9')) + uuid}@${address}:${port}?${securityParam}&sni=${sni}&alpn=${encodeURIComponent(alpn)}${fpParam}&type=${type}&host=${伪装域名}&path=${encodeURIComponent(最终路径) + xhttp + (scv == 'true' ? '&allowInsecure=1' : '')}${fragmentParam}&encryption=none#${encodeURIComponent(addressid + 节点备注)}`;
 					return 为烈士Link;
 				}
 
